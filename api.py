@@ -110,4 +110,4 @@ api.add_resource(GameList, "/games")
 api.add_resource(Game, "/game/<int:id>")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run('0.0.0.0.', debug=True)
