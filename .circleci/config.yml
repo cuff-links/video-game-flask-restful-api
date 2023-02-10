@@ -1,26 +1,94 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+orbs:
+  orbs: circleci/python@2.1.1
+  docker: circleci/docker@2.1.1
+  azure-aks: circleci/azure-aks@0.3.0
+  kubernetes: circleci/kubernetes@1.3.0
+
 jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+  build-and-test:
     docker:
-      - image: cimg/base:stable
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+      - image: cimg/python:3.11.0
+    steps: 
+      - checkout
+      - python/install-packages:
+         pkg-manager: pip
+      - run:
+          name: Run tests
+          command: pytest
+  aks-deploy:
+    executor: azure-aks/default
+    parameters:
+      cluster-name:
+        description: |
+          Name of the AKS cluster
+        type: string
+      resource-group:
+        description: |
+          Resource group that the cluster is in
+        type: string
     steps:
       - checkout
       - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+          name: Pull Updated code from repo
+          command: git pull origin $CIRCLE_BRANCH
+      - azure-aks/update-kubeconfig-with-credentials:
+          cluster-name: << parameters.cluster-name >>
+          install-kubectl: true
+          perform-login: true
+          resource-group: << parameters.resource-group >>
+      - kubernetes/create-or-update-resource:
+          resource-file-path: manifests/$APP_NAME.yaml
+          resource-name: kustomization/$APP_NAME
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+  bump-docker-tag-kustomize:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - run:
+          name: Install kustomize
+          command: |
+            URL=https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v4.5.2/kustomize_v4.5.2_linux_amd64.tar.gz
+            curl -L $URL | tar zx
+            [ -w /usr/local/bin ] && SUDO="" || SUDO=sudo
+            $SUDO chmod +x ./kustomize
+            $SUDO mv ./kustomize /usr/local/bin
+      - checkout
+      - run:
+          name: Bump Docker Tag
+          command: |
+            cd manifests
+            kustomize edit set image $APP_NAME=$DOCKER_LOGIN/$APP_NAME:$CIRCLE_SHA1
+            kustomize build . > $APP_NAME.yaml
+      - add_ssh_keys:
+          fingerprints:
+            - "$SSH_FINGERPRINT"
+      - run:
+          name: Commit & Push to GitHub
+          command: |
+            git config user.email "$GITHUB_EMAIL"
+            git config user.name "CircleCI User"
+            git checkout $CIRCLE_BRANCH           
+            git add manifests/$APP_NAME.yaml
+            git add manifests/kustomization.yaml
+            git commit -am "Bumps docker tag [skip ci]"
+            git push origin $CIRCLE_BRANCH
+
 workflows:
-  say-hello-workflow:
+  test-flask:
     jobs:
-      - say-hello
+      - build-and-test
+  Deploy-App-on-AKS:
+    jobs:
+      - docker/publish:
+          image: $DOCKER_LOGIN/$APP_NAME
+          tag: $CIRCLE_SHA1,latest
+      - bump-docker-tag-kustomize:
+          requires:
+            - docker/publish
+      - aks-deploy:
+          cluster-name: $CLUSTER_NAME
+          resource-group: $RESOURCE_GROUP
+          requires:
+            - bump-docker-tag-kustomize
