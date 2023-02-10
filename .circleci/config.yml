@@ -75,12 +75,10 @@ jobs:
             git commit -am "Bumps docker tag [skip ci]"
             git push origin $CIRCLE_BRANCH
 
-workflows:
-  test-flask:
+workflows:    
+  Test-Deploy-App-on-AKS:
     jobs:
       - build-and-test
-  Deploy-App-on-AKS:
-    jobs:
       - docker/publish:
           image: $DOCKER_LOGIN/$APP_NAME
           tag: $CIRCLE_SHA1,latest
