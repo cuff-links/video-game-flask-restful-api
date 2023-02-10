@@ -82,6 +82,8 @@ workflows:
       - docker/publish:
           image: $DOCKER_LOGIN/$APP_NAME
           tag: $CIRCLE_SHA1,latest
+          requires:
+            - "build-and-test"
       - bump-docker-tag-kustomize:
           requires:
             - docker/publish
