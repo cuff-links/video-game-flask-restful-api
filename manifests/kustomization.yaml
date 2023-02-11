@@ -8,4 +8,4 @@ namespace: python
 images:
 - name: videogameapi
   newName: silne30/videogameapi
-  newTag: a5cea3fa86e67f2e0589300397198179d94f17e1
+  newTag: 35e50e0b26b2df25d554169adcac824e05dcfc58
