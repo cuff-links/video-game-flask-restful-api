@@ -32,7 +32,7 @@ jobs:
           install-kubectl: true
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
-          resource-file-path: tests/nginx-deployment/deployment.yaml
+          resource-file-path: manifests/deployment.yaml
           resource-name: deployment/nginx-deployment
 
   bump-docker-tag-kustomize:
@@ -74,22 +74,22 @@ workflows:
       - build-and-test
       - docker/publish:
           image: $DOCKER_LOGIN/$APP_NAME
-          tag: $CIRCLE_SHA1,latest
+          tag: latest,$CIRCLE_BUILD_NUM
           requires:
             - "build-and-test"
       - bump-docker-tag-kustomize:
           requires:
             - docker/publish
       - aws-eks/create-cluster:
-          cluster-name: eks-demo-deployment
+          cluster-name: FlaskCluster
           requires:
             - "bump-docker-tag-kustomize"
       - create-deployment:
-          cluster-name: eks-demo-deployment
+          cluster-name: FlaskCluster
           requires:
             - aws-eks/create-cluster
       - aws-eks/update-container-image:
-          cluster-name: eks-demo-deployment
+          cluster-name: FlaskCluster
           container-image-updates: 'nginx=nginx:1.9.1'
           post-steps:
             - kubernetes/delete-resource:
