@@ -132,3 +132,9 @@ dmypy.json
 .pytest_cache
 .idea
 kubectl
+
+# Terraform state and secrets
+terraform_setup/terraform.tfstate
+terraform_setup/terraform.tfstate.backup
+terraform_setup/*.tfvars
+terraform_setup/.terraform
