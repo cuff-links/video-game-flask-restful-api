@@ -83,7 +83,7 @@ workflows:
       - aws-eks/create-cluster:
           cluster-name: eks-demo-deployment
           requires:
-            - "docker/publish"
+            - "bump-docker-tag-kustomize"
       - create-deployment:
           cluster-name: eks-demo-deployment
           requires:
