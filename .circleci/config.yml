@@ -78,7 +78,7 @@ workflows:
             - "build-and-test"
       - bump-docker-tag-kustomize:
           requires:
-            - docker/publish
+            - build-and-test
       - aws-eks/create-cluster:
           cluster-name: FlaskCluster
           requires:
