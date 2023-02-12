@@ -82,6 +82,8 @@ workflows:
             - docker/publish
       - aws-eks/create-cluster:
           cluster-name: eks-demo-deployment
+          requires:
+            - "docker/publish"
       - create-deployment:
           cluster-name: eks-demo-deployment
           requires:
