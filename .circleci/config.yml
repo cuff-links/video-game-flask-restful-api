@@ -74,7 +74,7 @@ workflows:
       - build-and-test
       - docker/publish:
           image: $DOCKER_LOGIN/$APP_NAME
-          tag: latest,$CIRCLE_BUILD_NUM
+          tag: newlatest
           requires:
             - "build-and-test"
       - bump-docker-tag-kustomize:
