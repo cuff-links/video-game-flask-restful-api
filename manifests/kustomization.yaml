@@ -6,6 +6,8 @@ resources:
 - namespace.yaml
 namespace: python
 images:
+- newName: silne30/
+  newTag: 6b5ed5f28a8bcc207a1f41264541e3d3cc6aea48
 - name: videogameapi
   newName: silne30/videogameapi
   newTag: 4d196375d4fd0f9008fea67913a24f9a210cfc0a
