@@ -38,7 +38,7 @@ spec:
         app: python
     spec:
       containers:
-      - image: silne30/videogameapi:2716abcd0cbe152ffb296a4589f6e431577a256d
+      - image: silne30/videogameapi:4d196375d4fd0f9008fea67913a24f9a210cfc0a
         name: videogameapi
         ports:
         - containerPort: 5050
