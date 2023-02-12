@@ -17,30 +17,23 @@ jobs:
       - run:
           name: Run tests
           command: pytest
-  aks-deploy:
-    executor: azure-aks/default
+  create-deployment:
+    docker:
+      - image: 'cimg/python:3.10'
     parameters:
       cluster-name:
         description: |
-          Name of the AKS cluster
-        type: string
-      resource-group:
-        description: |
-          Resource group that the cluster is in
+          Name of the EKS cluster
         type: string
     steps:
       - checkout
-      - run:
-          name: Pull Updated code from repo
-          command: git pull origin $CIRCLE_BRANCH
-      - azure-aks/update-kubeconfig-with-credentials:
+      - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
-          perform-login: true
-          resource-group: << parameters.resource-group >>
       - kubernetes/create-or-update-resource:
-          resource-file-path: manifests/$APP_NAME.yaml
-          resource-name: kustomization/$APP_NAME
+          get-rollout-status: true
+          resource-file-path: tests/nginx-deployment/deployment.yaml
+          resource-name: deployment/nginx-deployment
 
   bump-docker-tag-kustomize:
     docker:
@@ -87,8 +80,20 @@ workflows:
       - bump-docker-tag-kustomize:
           requires:
             - docker/publish
-      - aks-deploy:
-          cluster-name: $CLUSTER_NAME
-          resource-group: $RESOURCE_GROUP
+      - aws-eks/create-cluster:
+          cluster-name: eks-demo-deployment
+      - create-deployment:
+          cluster-name: eks-demo-deployment
           requires:
-            - bump-docker-tag-kustomize
+            - aws-eks/create-cluster
+      - aws-eks/update-container-image:
+          cluster-name: eks-demo-deployment
+          container-image-updates: 'nginx=nginx:1.9.1'
+          post-steps:
+            - kubernetes/delete-resource:
+                resource-names: nginx-deployment
+                resource-types: deployment
+                wait: true
+          requires:
+            - create-deployment
+          resource-name: deployment/nginx-deployment
