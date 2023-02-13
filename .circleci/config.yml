@@ -4,7 +4,7 @@ orbs:
   python: circleci/python@2.1.1
   docker: circleci/docker@2.1.1
   aws-ecr: circleci/aws-ecr@8.2.1
-  aws-ecs: circleci/aws-ecs@0.0.10
+  aws-ecs: circleci/aws-ecs@3.2.0
 
 jobs:
   build-and-test:
