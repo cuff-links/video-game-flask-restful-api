@@ -75,6 +75,7 @@ workflows:
           public-registry: false
           push-image: true
           region: AWS_DEFAULT_REGION
+          repo: flask-api
           skip-when-tags-exist: false
           tag: 'latest,myECRRepoTag'
           requires:
