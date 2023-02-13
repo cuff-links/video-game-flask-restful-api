@@ -3,7 +3,7 @@ version: 2.1
 orbs:
   python: circleci/python@2.1.1
   docker: circleci/docker@2.1.1
-  aws-ecr: circleci/aws-ecr@0.0.2
+  aws-ecr: circleci/aws-ecr@8.2.1
   aws-ecs: circleci/aws-ecs@0.0.10
 
 jobs:
@@ -61,16 +61,27 @@ workflows:
       - bump-docker-tag-kustomize:
           requires:
             - build-and-test
-      - aws-ecr/build_and_push_image:
-            account-url: "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
-            repo: "${AWS_RESOURCE_NAME_PREFIX}"
-            region: ${AWS_DEFAULT_REGION}
-            tag: "${CIRCLE_SHA1}"
-            requires:
+      - aws-ecr/build-and-push-image:
+          aws-access-key-id: ACCESS_KEY_ID
+          aws-cli-version: latest
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          create-repo: true
+          dockerfile: Dockerfile
+          executor: aws-ecr/default
+          extra-build-args: '--compress'
+          no-output-timeout: 20m
+          platform: linux/amd64
+          profile-name: myProfileName
+          public-registry: false
+          push-image: true
+          region: AWS_DEFAULT_REGION
+          skip-when-tags-exist: false
+          tag: 'latest,myECRRepoTag'
+          requires:
               - "bump-docker-tag-kustomize"
       - aws-ecs/deploy-service-update:
             requires:
-              - aws-ecr/build_and_push_image
+              - aws-ecr/build-and-push-image
             aws-region: ${AWS_DEFAULT_REGION}
             family: "${AWS_RESOURCE_NAME_PREFIX}-service"
             cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
