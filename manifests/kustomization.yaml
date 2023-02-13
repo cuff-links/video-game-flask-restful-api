@@ -7,7 +7,7 @@ resources:
 namespace: python
 images:
 - newName: silne30/
-  newTag: a0b92d47cee681dcb0fb7f34beba0f3942e392c0
+  newTag: 34e7951faff9d169855d9e145703c67ca79f955d
 - name: videogameapi
   newName: silne30/videogameapi
   newTag: 4d196375d4fd0f9008fea67913a24f9a210cfc0a
