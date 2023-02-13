@@ -62,19 +62,18 @@ workflows:
           requires:
             - build-and-test
       - aws-ecr/build-and-push-image:
-          aws-access-key-id: ACCESS_KEY_ID
+          aws-access-key-id: ${ACCESS_KEY_ID}
           aws-cli-version: latest
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
           create-repo: true
           dockerfile: Dockerfile
           executor: aws-ecr/default
           extra-build-args: '--compress'
           no-output-timeout: 20m
           platform: linux/amd64
-          profile-name: myProfileName
           public-registry: false
           push-image: true
-          region: AWS_DEFAULT_REGION
+          region: ${AWS_DEFAULT_REGION}
           repo: flask-api
           skip-when-tags-exist: false
           tag: 'latest,myECRRepoTag'
