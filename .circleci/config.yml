@@ -1,0 +1,87 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@2.1.1
+  docker: circleci/docker@2.1.1
+  aws-ecr: circleci/aws-ecr@8.2.1
+  aws-ecs: circleci/aws-ecs@3.2.0
+
+jobs:
+  build-and-test:
+    docker:
+      - image: cimg/python:3.11.0
+    steps: 
+      - checkout
+      - python/install-packages:
+         pkg-manager: pip
+      - run:
+          name: Run tests
+          command: pytest
+  bump-docker-tag-kustomize:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - run:
+          name: Install kustomize
+          command: |
+            URL=https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v4.5.2/kustomize_v4.5.2_linux_amd64.tar.gz
+            curl -L $URL | tar zx
+            [ -w /usr/local/bin ] && SUDO="" || SUDO=sudo
+            $SUDO chmod +x ./kustomize
+            $SUDO mv ./kustomize /usr/local/bin
+      - checkout
+      - run:
+          name: Bump Docker Tag
+          command: |
+            cd manifests
+            kustomize edit set image $APP_NAME=$DOCKER_LOGIN/$APP_NAME:$CIRCLE_SHA1
+            kustomize build . > $APP_NAME.yaml
+      - add_ssh_keys:
+          fingerprints:
+            - "$SSH_FINGERPRINT"
+      - run:
+          name: Commit & Push to GitHub
+          command: |
+            git config user.email "$GITHUB_EMAIL"
+            git config user.name "CircleCI User"
+            git checkout $CIRCLE_BRANCH           
+            git add manifests/$APP_NAME.yaml
+            git add manifests/kustomization.yaml
+            git commit -am "Bumps docker tag [skip ci]"
+            git push origin $CIRCLE_BRANCH
+
+workflows:    
+  Test-Deploy-App-on-AKS:
+    jobs:
+      - build-and-test
+      - docker/publish:
+          image: $DOCKER_LOGIN/$APP_NAME
+          requires:
+            - "build-and-test"
+      - bump-docker-tag-kustomize:
+          requires:
+            - build-and-test
+      - aws-ecr/build-and-push-image:
+          aws-cli-version: latest
+          create-repo: true
+          dockerfile: Dockerfile
+          executor: aws-ecr/default
+          extra-build-args: '--compress'
+          no-output-timeout: 20m
+          platform: linux/amd64
+          public-registry: false
+          push-image: true
+          region: $AWS_DEFAULT_REGION
+          repo: flask-api
+          skip-when-tags-exist: false
+          tag: 'latest,myECRRepoTag'
+          requires:
+              - "bump-docker-tag-kustomize"
+      - aws-ecs/deploy-service-update:
+            requires:
+              - aws-ecr/build-and-push-image
+            family: "${AWS_RESOURCE_NAME_PREFIX}-service"
+            cluster: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
+            container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,image-and-tag=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${AWS_RESOURCE_NAME_PREFIX}:${CIRCLE_SHA1}"
+            verify-revision-is-deployed: true
+            skip-task-definition-registration: true

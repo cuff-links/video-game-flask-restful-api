@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    name: python
+  name: python
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: python
+  name: python
+  namespace: python
+spec:
+  ports:
+  - port: 5050
+    targetPort: 5050
+  selector:
+    app: python
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: python
+  name: python
+  namespace: python
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: python
+  template:
+    metadata:
+      labels:
+        app: python
+    spec:
+      containers:
+      - image: silne30/videogameapi:4d196375d4fd0f9008fea67913a24f9a210cfc0a
+        name: videogameapi
+        ports:
+        - containerPort: 5050
+          name: http
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 250m
+            memory: 64Mi
+      nodeSelector:
+        beta.kubernetes.io/os: linux

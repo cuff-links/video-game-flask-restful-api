@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- deployment.yaml
+- service.yaml
+- namespace.yaml
+namespace: python
+images:
+- newName: silne30/
+  newTag: da70052afa053a9b3b83ef05ae08be3d511a72ee
+- name: videogameapi
+  newName: silne30/videogameapi
+  newTag: 4d196375d4fd0f9008fea67913a24f9a210cfc0a
