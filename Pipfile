@@ -8,6 +8,8 @@ verify_ssl = true
 [packages]
 flask = "*"
 flask-restful = "*"
+pytest = "*"
+pytest-spec = "*"
 
 [requires]
 python_version = "3.9"
