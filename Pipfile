@@ -11,6 +11,8 @@ flask-restful = "*"
 pytest = "*"
 pytest-spec = "*"
 flask-cors = "*"
+waitress = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.9"

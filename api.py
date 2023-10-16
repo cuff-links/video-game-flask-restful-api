@@ -1,6 +1,8 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_restful import Resource, Api, reqparse, abort, marshal, fields
+import os
+import waitress
 
 # Initialize Flask
 app = Flask(__name__)
@@ -113,4 +115,6 @@ api.add_resource(Game, "/game/<int:id>")
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 33507))
+    waitress.serve(app, port=port)
     app.run(host='0.0.0.0', debug=True, port=5050)
