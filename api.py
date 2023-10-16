@@ -117,4 +117,3 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 33507))
     waitress.serve(app, port=port)
-    app.run(host='0.0.0.0', debug=True, port=5050)
