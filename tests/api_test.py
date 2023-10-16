@@ -4,7 +4,7 @@ from api import app
 
 class TestGamesApi:
 
-    def test_get_all_game(self):
+    def test_get_all_games(self):
         with app.test_client() as client:
             response = client.get('/games')
             res = json.loads(response.data.decode('utf-8')).get('games')
@@ -15,7 +15,7 @@ class TestGamesApi:
             assert len(res) == 2
             assert type(res) is list
 
-    def test_get_individual_games(self):
+    def test_get_individual_game(self):
         with app.test_client() as client:
             response = client.get('/game/1')
             res = json.loads(response.data.decode('utf-8')).get('game')

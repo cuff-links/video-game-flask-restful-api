@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from flask_restful import Resource, Api, reqparse, abort, marshal, fields
 
 # Initialize Flask
@@ -108,6 +109,8 @@ class GameList(Resource):
 
 api.add_resource(GameList, "/games")
 api.add_resource(Game, "/game/<int:id>")
+
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=5050)

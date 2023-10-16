@@ -1,0 +1,35 @@
+name: CI/CD
+
+# Controls when the workflow will run
+on:
+  # Activates the workflow; then there is a push to the main or master branch
+  push:
+    branches: [main]
+
+  # allows you to manually execute this pipeline from the Actions tab.
+  workflow_dispatch:
+
+# A workflow run consists of one or more jobs that can be executed either sequentially or concurrently.
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    #
+    steps:
+      - uses: actions/checkout@v2  
+      - uses: actions/setup-python@v2  
+      - run: pip install pipenv
+      - run: pipenv install
+      - run: pipenv run pytest
+
+      - uses: akhileshns/heroku-deploy@v3.12.12 #
+        env:
+         API_SECRET: ${{ secrets.HEROKU_API_KEY }}
+         EMAIL_SECRET: ${{ secrets.HEROKU_EMAIL }}
+        with:
+          heroku_api_key: "$API_SECRET"
+          heroku_app_name: videogame-rest-api
+          heroku_email: "$EMAIL_SECRET"
+
